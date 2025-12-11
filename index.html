@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Parabola Key Values</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f4f7f9; }
+        .controls { 
+            margin: 20px auto; 
+            background: #e9ecef; 
+            padding: 20px; 
+            border-radius: 12px; 
+            display: inline-block; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: left; /* Align text within controls */
+        }
+        canvas { 
+            border: 2px solid #007bff; 
+            background: #fff; 
+            margin-top: 15px; 
+            border-radius: 8px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        label { 
+            width: 40px; 
+            font-weight: bold; 
+            font-size: 1.1em;
+            text-align: left;
+        }
+        input[type=range] { 
+            width: 250px; 
+            margin: 0 10px; 
+            vertical-align: middle; 
+        }
+        input[type=number] {
+            width: 70px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            text-align: center;
+        }
+        h3 { color: #007bff; text-align: center; margin-bottom: 20px; }
+        .key-values {
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 2px solid #ccc;
+            background: #fff;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+        .key-values p { margin: 8px 0; }
+        .key-values strong { color: #d9534f; }
+    </style>
+</head>
+<body>
+
+    <h2>క్వాడ్రాటిక్ సమీకరణ గ్రాఫ్ ఎక్స్‌ప్లోరర్: ax² + bx + c</h2>
+    
+    <div class="controls">
+        <h3>విలువలను ఎంటర్ చేయండి (Enter Values)</h3>
+        
+        <div class="input-group">
+            <label>a:</label> 
+            <input type="range" id="sliderA" min="-5" max="5" step="0.1" value="1">
+            <input type="number" id="inputA" min="-5" max="5" step="0.1" value="1">
+        </div>
+        
+        <div class="input-group">
+            <label>b:</label> 
+            <input type="range" id="sliderB" min="-10" max="10" step="0.5" value="0">
+            <input type="number" id="inputB" min="-10" max="10" step="0.5" value="0">
+        </div>
+        
+        <div class="input-group">
+            <label>c:</label> 
+            <input type="range" id="sliderC" min="-10" max="10" step="0.5" value="0">
+            <input type="number" id="inputC" min="-10" max="10" step="0.5" value="0">
+        </div>
+        
+        <h3 id="equationDisplay" style="text-align: center;">y = 1x² + 0x + 0</h3>
+
+        <div class="key-values">
+            <h4>గ్రాఫ్ కీ విలువలు (Graph Key Values)</h4>
+            <p><strong>శీర్షం (Vertex):</strong> <span id="vertexValue">(-b/2a)</span></p>
+            <p><strong>X-అక్షం మూలాలు (X-Intercepts/Roots):</strong> <span id="rootsValue">($\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$)</span></p>
+        </div>
+    </div>
+
+    <br>
+    <canvas id="graphCanvas" width="600" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('graphCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        // Center of the canvas (Origin 0,0)
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const scale = 20; // 1 unit = 20 pixels (adjust as needed)
+
+        // Get Input Elements
+        const inputA = document.getElementById('inputA');
+        const inputB = document.getElementById('inputB');
+        const inputC = document.getElementById('inputC');
+        const sliderA = document.getElementById('sliderA');
+        const sliderB = document.getElementById('sliderB');
+        const sliderC = document.getElementById('sliderC');
+        const equationDisplay = document.getElementById('equationDisplay');
+        const vertexValue = document.getElementById('vertexValue');
+        const rootsValue = document.getElementById('rootsValue');
+
+        function formatNumber(num) {
+            // Format number to 2 decimal places
+            return parseFloat(num.toFixed(2));
+        }
+
+        function calculateKeyValues(a, b, c) {
+            let results = {};
+
+            // 1. Calculate Vertex (h, k)
+            if (a === 0) {
+                // If a=0, it's a straight line, not a parabola
+                results.vertex = "N/A (Straight Line)";
+                results.roots = "N/A (Line)";
+                return results;
+            }
+
+            const h = -b / (2 * a); // x-coordinate of the vertex
+            const k = (a * h * h) + (b * h) + c; // y-coordinate of the vertex
+
+            results.vertex = `(${formatNumber(h)}, ${formatNumber(k)})`;
+
+            // 2. Calculate Roots (X-Intercepts)
+            const discriminant = (b * b) - (4 * a * c);
+            
+            if (discriminant < 0) {
+                results.roots = "నిజ మూలాలు లేవు (No Real Roots)";
+            } else if (discriminant === 0) {
+                // One real root
+                const root = -b / (2 * a);
+                results.roots = `ఒక మూలం: ${formatNumber(root)}`;
+            } else {
+                // Two real roots
+                const sqrtD = Math.sqrt(discriminant);
+                const root1 = (-b + sqrtD) / (2 * a);
+                const root2 = (-b - sqrtD) / (2 * a);
+                results.roots = `x₁: ${formatNumber(root1)}, x₂: ${formatNumber(root2)}`;
+            }
+
+            return results;
+        }
+
+        function updateInputs(sourceElement) {
+            // Syncs the slider and number input based on which one changed
+            // Ensure the input value is within the slider min/max bounds before syncing the slider
+            let value = parseFloat(sourceElement.value);
+
+            if (sourceElement.type === 'range') {
+                // Slider changed, update number input
+                sourceElement.nextElementSibling.value = value;
+            } else if (sourceElement.type === 'number') {
+                // Number input changed, update slider (optional: enforce bounds)
+                let min = parseFloat(sourceElement.min);
+                let max = parseFloat(sourceElement.max);
+                if (value < min) value = min;
+                if (value > max) value = max;
+                sourceElement.previousElementSibling.value = value;
+            }
+
+            draw();
+        }
+
+        function draw() {
+            // Get values from the NUMERICAL INPUT boxes
+            let a = parseFloat(inputA.value);
+            let b = parseFloat(inputB.value);
+            let c = parseFloat(inputC.value);
+
+            // Calculate and display key values
+            const keyValues = calculateKeyValues(a, b, c);
+            vertexValue.innerText = keyValues.vertex;
+            rootsValue.innerText = keyValues.roots;
+
+            // Update Equation Text
+            equationDisplay.innerText = `y = ${a}x² + ${b}x + ${c}`;
+
+            // --- Canvas Drawing Logic (Same as before) ---
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // --- Draw Grid ---
+            ctx.beginPath();
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            // Vertical lines
+            for(let x = 0; x <= width; x += scale) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+            // Horizontal lines
+            for(let y = 0; y <= height; y += scale) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+            ctx.stroke();
+
+            // --- Draw Axes ---
+            ctx.beginPath();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.moveTo(centerX, 0); ctx.lineTo(centerX, height); // Y-axis
+            ctx.moveTo(0, centerY); ctx.lineTo(width, centerY); // X-axis
+            ctx.stroke();
+
+            // --- Draw Parabola ---
+            ctx.beginPath();
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 3;
+
+            // Plot points
+            let firstPoint = true;
+            for (let pixelX = 0; pixelX <= width; pixelX++) {
+                // Convert pixel X to math X
+                let x = (pixelX - centerX) / scale;
+                
+                // Calculate y = ax^2 + bx + c
+                let y = (a * x * x) + (b * x) + c;
+                
+                // Convert math Y to pixel Y (invert Y axis because canvas Y goes down)
+                let pixelY = centerY - (y * scale);
+
+                if (firstPoint) {
+                    ctx.moveTo(pixelX, pixelY);
+                    firstPoint = false;
+                } else {
+                    // Check if the point is off-screen vertically to prevent drawing lines across the canvas
+                    if (pixelY >= 0 && pixelY <= height) {
+                         ctx.lineTo(pixelX, pixelY);
+                    } else {
+                         // Stop drawing when off-screen and start fresh for the next segment
+                         firstPoint = true;
+                    }
+                }
+            }
+            ctx.stroke();
+        }
+
+        // --- Event Listeners ---
+        // Listeners for Slider inputs
+        sliderA.addEventListener('input', () => updateInputs(sliderA));
+        sliderB.addEventListener('input', () => updateInputs(sliderB));
+        sliderC.addEventListener('input', () => updateInputs(sliderC));
+
+        // Listeners for Number inputs
+        inputA.addEventListener('input', () => updateInputs(inputA));
+        inputB.addEventListener('input', () => updateInputs(inputB));
+        inputC.addEventListener('input', () => updateInputs(inputC));
+
+        // Initial Draw
+        draw();
+    </script>
+</body>
+</html>
